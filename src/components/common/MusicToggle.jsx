@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 // Soft piano pavane, CC0: Thoinot Arbeau, performed by Membeth.
 // https://commons.wikimedia.org/wiki/File:Pavane.Thoinot.Arbeau.meantone.temperament.ogg
-const TRACK = '/audio/wedding-instrumental.mp3'
+const TRACK = '/audio/wedding-music.mp3'
 const SOFT_VOLUME = 0.28
 
 export default function MusicToggle() {
@@ -57,7 +57,7 @@ export default function MusicToggle() {
         onClick={toggle}
         aria-pressed={playing}
         aria-label={playing ? 'Pause wedding music' : 'Play wedding music'}
-        title={missing ? 'Add public/audio/wedding-instrumental.mp3' : undefined}
+        title={missing ? 'Add public/audio/wedding-music.mp3' : undefined}
         className={`fixed right-3 top-[4.75rem] z-50 inline-flex h-12 w-12 items-center justify-center rounded-full border border-gold bg-ivory text-burgundy transition-colors hover:bg-gold hover:text-brown ${
           playing ? 'music-live' : ''
         }`}

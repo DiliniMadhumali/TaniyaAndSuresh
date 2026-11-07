@@ -1,11 +1,20 @@
 import { useInvite } from '../../context/InviteContext.jsx'
-import { TIMEZONE, coupleNames, invitationMessage, wedding } from '../../data/weddingData.js'
+import {
+  TIMEZONE,
+  coupleNames,
+  invitationClosingMessage,
+  invitationHeading,
+  invitationMessage,
+  invitationOccasion,
+  wedding,
+} from '../../data/weddingData.js'
 import FloralSprig from '../common/FloralSprig.jsx'
 import GoldDivider from '../common/GoldDivider.jsx'
 import Reveal from '../common/Reveal.jsx'
 
 export default function InvitationMessage() {
   const { status, guest } = useInvite()
+  const guestName = status === 'ready' && guest ? guest.fullName : 'Guest'
 
   return (
     <section id="invitation" className="relative scroll-mt-20 overflow-hidden border-y border-gold/40 bg-ivory px-4 py-20 text-center sm:px-6 sm:py-28">
@@ -13,21 +22,24 @@ export default function InvitationMessage() {
       <FloralSprig className="pointer-events-none absolute bottom-8 right-4 h-12 w-12 -scale-x-100 text-olive/60 sm:right-10" />
       <Reveal>
         {status === 'ready' && guest ? (
-          <p className="mb-6 font-script text-4xl text-burgundy sm:text-5xl">Dear {guest.fullName}</p>
+          <p className="mb-6 font-script text-4xl text-burgundy sm:text-5xl">Dear {guestName},</p>
         ) : null}
         <p className="text-[0.68rem] font-medium uppercase tracking-[0.32em] text-burgundy">
-          Request the pleasure of the presence of
+          {invitationHeading}
         </p>
         <GoldDivider className="mt-6" />
         <blockquote className="mx-auto mt-8 max-w-3xl font-serif text-3xl font-medium leading-snug text-brown sm:text-5xl">
           {invitationMessage}
         </blockquote>
         <p className="mt-8 text-[0.68rem] font-medium uppercase tracking-[0.28em] text-burgundy">
-          To celebrate their marriage
+          {invitationOccasion}
         </p>
         <GoldDivider className="mt-6" />
         <CeremonyDate />
         <p className="mt-8 font-script text-5xl text-burgundy">{coupleNames}</p>
+        <p className="mx-auto mt-8 max-w-3xl text-sm font-light leading-relaxed text-brown/80 sm:text-base">
+          {invitationClosingMessage}
+        </p>
       </Reveal>
     </section>
   )

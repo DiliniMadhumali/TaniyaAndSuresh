@@ -28,27 +28,27 @@ export default function HeroSection() {
           <span className="h-px w-16 bg-gold sm:w-24" />
         </div>
 
-        <div className="mt-10 grid items-center gap-8 md:mt-14 md:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)_minmax(0,1fr)] md:gap-6">
+        <div className="mt-10 grid items-center gap-3 sm:gap-4 md:mt-14 md:grid-cols-[minmax(0,1fr)_minmax(8rem,13rem)_minmax(0,1fr)]">
           <FamilySide
             role="Bride"
             name={wedding.bride}
             nameClass="name-shimmer name-taniya"
             parents={wedding.brideParents}
-            className="md:order-1"
+            className="min-w-0 md:order-1"
           />
           <img
             src="/images/couple-flowers.png"
             alt=""
             width="935"
             height="1024"
-            className="mx-auto h-auto w-full max-w-sm bg-transparent object-contain md:order-2"
+            className="mx-auto h-auto w-full max-w-[8rem] object-contain sm:max-w-[10rem] md:max-w-sm md:order-2"
           />
           <FamilySide
             role="Groom"
             name={wedding.groom}
             nameClass="name-shimmer name-suresh"
             parents={wedding.groomParents}
-            className="md:order-3"
+            className="min-w-0 md:order-3"
           />
         </div>
       </div>

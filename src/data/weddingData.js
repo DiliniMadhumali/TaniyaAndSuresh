@@ -20,6 +20,10 @@ export const coupleNames = `${wedding.bride} & ${wedding.groom}`
 export const invitationMessage =
   'With the blessings of our families, we joyfully invite you to celebrate the beginning of our new journey together.'
 
+export const invitationHeading = 'REQUEST THE PLEASURE OF YOUR PRESENCE'
+export const invitationOccasion = 'TO CELEBRATE OUR MARRIAGE'
+export const invitationClosingMessage = 'We would be truly delighted to have you join us and share in our special day.'
+
 export const rsvpPrompt =
   'We would be delighted to celebrate our special day with you.'
 

@@ -1,9 +1,19 @@
 import { events } from '../../data/weddingData.js'
+import { useInvite } from '../../context/InviteContext.jsx'
 import Reveal from '../common/Reveal.jsx'
 import SectionHeading from '../common/SectionHeading.jsx'
 import EventCard from './EventCard.jsx'
 
 export default function EventsSection({ showHeading = true }) {
+  const { status, guest } = useInvite()
+  const visibleEvents = status === 'ready' && guest
+    ? events.filter((event) => {
+        if (event.id === 'ceremony') return guest.invitedToChurch ?? true
+        if (event.id === 'reception') return guest.invitedToReception ?? true
+        return true
+      })
+    : events
+
   return (
     <section id="events" className="scroll-mt-20">
       {showHeading ? (
@@ -16,7 +26,7 @@ export default function EventsSection({ showHeading = true }) {
         </div>
       ) : null}
       <div className={showHeading ? 'mt-8' : ''}>
-        {events.map((event) => (
+        {visibleEvents.map((event) => (
           <Reveal key={event.id}>
             <EventCard event={event} />
           </Reveal>

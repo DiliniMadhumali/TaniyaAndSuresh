@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ATTENDANCE_LABELS, copyText, generateInvitationCode, invitationLink } from '../../lib/invitation.js'
 import { createGuest, deleteGuest, listGuests, updateGuest } from '../../services/adminGuests.js'
 import { AdminBar } from '../../components/admin/AdminShell.jsx'
 import { useAdminAuth } from '../../context/AdminAuthContext.jsx'
@@ -200,6 +199,7 @@ export default function AdminDashboard() {
                     <th className="px-3 py-3 font-medium">Guest</th>
                     <th className="px-3 py-3 font-medium">Code</th>
                     <th className="px-3 py-3 font-medium">Phone</th>
+                    <th className="px-3 py-3 font-medium">Invited events</th>
                     <th className="px-3 py-3 font-medium">Church</th>
                     <th className="px-3 py-3 font-medium">Reception</th>
                     <th className="px-3 py-3 font-medium">Invitation</th>
@@ -213,6 +213,7 @@ export default function AdminDashboard() {
                       <td className="px-3 py-4 font-medium">{guest.fullName}</td>
                       <td className="px-3 py-4 tracking-wide">{guest.invitationCode}</td>
                       <td className="px-3 py-4">{guest.phoneNumber || '—'}</td>
+                      <td className="px-3 py-4">{describeInvitationPermissions(guest)}</td>
                       <td className="px-3 py-4">{ATTENDANCE_LABELS[guest.churchAttendance]}</td>
                       <td className="px-3 py-4">{ATTENDANCE_LABELS[guest.receptionAttendance]}</td>
                       <td className="px-3 py-4">{guest.invitationSent ? 'Sent' : 'Not sent'}</td>
@@ -326,6 +327,7 @@ function GuestDetails({ guest, onClose, onCopy }) {
         <Detail label="Phone" value={guest.phoneNumber || '—'} />
         <Detail label="Email" value={guest.email || '—'} />
         <Detail label="Category" value={guest.guestCategory || '—'} />
+        <Detail label="Invited events" value={describeInvitationPermissions(guest)} />
         <Detail label="Church RSVP" value={ATTENDANCE_LABELS[guest.churchAttendance]} />
         <Detail label="Reception RSVP" value={ATTENDANCE_LABELS[guest.receptionAttendance]} />
         <Detail label="Invitation" value={guest.invitationSent ? 'Sent' : 'Not sent'} />
@@ -349,6 +351,16 @@ function GuestEditor({ guest, onClose, onSave }) {
     setForm((current) => ({ ...current, [field]: value }))
   }
 
+  function updateInvitationMode(mode) {
+    const church = mode === 'church' || mode === 'both'
+    const reception = mode === 'reception' || mode === 'both'
+    setForm((current) => ({
+      ...current,
+      invitedToChurch: church,
+      invitedToReception: reception,
+    }))
+  }
+
   async function onSubmit(event) {
     event.preventDefault()
     const problem = validateGuest(form)
@@ -366,6 +378,8 @@ function GuestEditor({ guest, onClose, onSave }) {
     }
   }
 
+  const invitationMode = getInvitationMode(form.invitedToChurch, form.invitedToReception)
+
   return (
     <Dialog title={guest ? 'Edit guest' : 'Add guest'} onClose={onClose}>
       <form className="grid gap-4" onSubmit={onSubmit}>
@@ -379,6 +393,18 @@ function GuestEditor({ guest, onClose, onSave }) {
         <Field label="Phone number" value={form.phoneNumber} onChange={(value) => update('phoneNumber', value)} />
         <Field label="Email" type="email" value={form.email} onChange={(value) => update('email', value)} />
         <Field label="Guest category" value={form.guestCategory} onChange={(value) => update('guestCategory', value)} />
+        <label className="block text-sm">
+          <span className="text-[0.62rem] uppercase tracking-[0.18em] text-burgundy">Invited events</span>
+          <select
+            className="admin-field mt-2"
+            value={invitationMode}
+            onChange={(event) => updateInvitationMode(event.target.value)}
+          >
+            <option value="both">Both Church and Reception</option>
+            <option value="church">Church only</option>
+            <option value="reception">Reception only</option>
+          </select>
+        </label>
         <div className="grid gap-4 sm:grid-cols-2">
           <Select label="Church RSVP" value={form.churchAttendance} onChange={(value) => update('churchAttendance', value)} />
           <Select label="Reception RSVP" value={form.receptionAttendance} onChange={(value) => update('receptionAttendance', value)} />
@@ -470,10 +496,28 @@ function emptyGuest() {
     phoneNumber: '',
     email: '',
     guestCategory: '',
+    invitedToChurch: true,
+    invitedToReception: true,
     churchAttendance: 'pending',
     receptionAttendance: 'pending',
     invitationSent: false,
   }
+}
+
+function getInvitationMode(invitedToChurch, invitedToReception) {
+  if (invitedToChurch && invitedToReception) return 'both'
+  if (invitedToChurch) return 'church'
+  if (invitedToReception) return 'reception'
+  return 'both'
+}
+
+function describeInvitationPermissions(guest) {
+  const church = guest.invitedToChurch ?? true
+  const reception = guest.invitedToReception ?? true
+  if (church && reception) return 'Church + reception'
+  if (church) return 'Church only'
+  if (reception) return 'Reception only'
+  return 'No events'
 }
 
 function validateGuest(form) {
@@ -497,6 +541,9 @@ function validateGuest(form) {
   }
   if (!['pending', 'attending', 'not_attending'].includes(form.receptionAttendance)) {
     return 'Choose a reception attendance status.'
+  }
+  if (!form.invitedToChurch && !form.invitedToReception) {
+    return 'Choose at least one invited event.'
   }
   return ''
 }

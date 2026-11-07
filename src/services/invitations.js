@@ -19,6 +19,8 @@ function toPublicGuest(row) {
 
   return {
     fullName: row.full_name,
+    invitedToChurch: row.invited_to_church ?? true,
+    invitedToReception: row.invited_to_reception ?? true,
     churchAttendance: row.church_attendance,
     receptionAttendance: row.reception_attendance,
   }

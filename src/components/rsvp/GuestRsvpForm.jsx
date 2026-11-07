@@ -9,7 +9,9 @@ const reception = events[1]
 
 export default function GuestRsvpForm() {
   const { code, guest, reload } = useInvite()
-  const replied = guest.churchAttendance !== 'pending' && guest.receptionAttendance !== 'pending'
+  const invitedToChurch = guest.invitedToChurch ?? true
+  const invitedToReception = guest.invitedToReception ?? true
+  const replied = (!invitedToChurch || guest.churchAttendance !== 'pending') && (!invitedToReception || guest.receptionAttendance !== 'pending')
   const [editing, setEditing] = useState(!replied)
   const [church, setChurch] = useState(guest.churchAttendance === 'pending' ? '' : guest.churchAttendance)
   const [receptionChoice, setReceptionChoice] = useState(
@@ -20,8 +22,12 @@ export default function GuestRsvpForm() {
 
   async function onSubmit(event) {
     event.preventDefault()
-    if (!church || !receptionChoice) {
-      setError('Please choose attending or not attending for both events.')
+    if (invitedToChurch && !church) {
+      setError('Please choose attending or not attending for the church event.')
+      return
+    }
+    if (invitedToReception && !receptionChoice) {
+      setError('Please choose attending or not attending for the reception event.')
       return
     }
 
@@ -29,11 +35,13 @@ export default function GuestRsvpForm() {
     setError('')
 
     try {
-      await submitRsvp(code, church, receptionChoice)
+      await submitRsvp(code, invitedToChurch ? church : null, invitedToReception ? receptionChoice : null)
       await reload({ quiet: true })
       setEditing(false)
     } catch (submitError) {
       const known = [
+        'Please choose attending or not attending for the church event.',
+        'Please choose attending or not attending for the reception event.',
         'Please choose attending or not attending for both events.',
         'Please wait a moment and try again.',
         'This invitation link is not recognised.',
@@ -50,14 +58,18 @@ export default function GuestRsvpForm() {
         <p className="font-serif text-3xl text-ivory">Thank you, {guest.fullName}.</p>
         <p className="mt-4 text-sm font-light leading-relaxed text-ivory/80">Your reply has been saved. You can update it at any time.</p>
         <dl className="mt-6 space-y-2 text-sm text-ivory">
-          <div>
-            <dt className="text-[0.62rem] uppercase tracking-[0.22em] text-gold">Church ceremony</dt>
-            <dd className="mt-1">{ATTENDANCE_LABELS[guest.churchAttendance]}</dd>
-          </div>
-          <div>
-            <dt className="text-[0.62rem] uppercase tracking-[0.22em] text-gold">Wedding reception</dt>
-            <dd className="mt-1">{ATTENDANCE_LABELS[guest.receptionAttendance]}</dd>
-          </div>
+          {invitedToChurch ? (
+            <div>
+              <dt className="text-[0.62rem] uppercase tracking-[0.22em] text-gold">Church ceremony</dt>
+              <dd className="mt-1">{ATTENDANCE_LABELS[guest.churchAttendance]}</dd>
+            </div>
+          ) : null}
+          {invitedToReception ? (
+            <div>
+              <dt className="text-[0.62rem] uppercase tracking-[0.22em] text-gold">Wedding reception</dt>
+              <dd className="mt-1">{ATTENDANCE_LABELS[guest.receptionAttendance]}</dd>
+            </div>
+          ) : null}
         </dl>
         <button
           type="button"
@@ -74,18 +86,22 @@ export default function GuestRsvpForm() {
     <form className="mx-auto mt-10 max-w-3xl" onSubmit={onSubmit}>
       <p className="text-center font-serif text-3xl text-ivory">Dear {guest.fullName}</p>
       <div className="mt-8 grid gap-6">
-        <ChoiceGroup
-          legend={`${ceremony.title} · ${ceremony.venue}`}
-          name="church"
-          value={church}
-          onChange={setChurch}
-        />
-        <ChoiceGroup
-          legend={`${reception.title} · ${reception.venue}`}
-          name="reception"
-          value={receptionChoice}
-          onChange={setReceptionChoice}
-        />
+        {invitedToChurch ? (
+          <ChoiceGroup
+            legend={`${ceremony.title} · ${ceremony.venue}`}
+            name="church"
+            value={church}
+            onChange={setChurch}
+          />
+        ) : null}
+        {invitedToReception ? (
+          <ChoiceGroup
+            legend={`${reception.title} · ${reception.venue}`}
+            name="reception"
+            value={receptionChoice}
+            onChange={setReceptionChoice}
+          />
+        ) : null}
       </div>
       {error ? <p className="mt-6 text-center text-sm text-gold">{error}</p> : null}
       <div className="mt-8 text-center">

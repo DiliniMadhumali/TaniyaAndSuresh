@@ -33,10 +33,12 @@ export default function GuestRsvpForm() {
       await reload({ quiet: true })
       setEditing(false)
     } catch (submitError) {
-      const message = submitError.message?.includes('Choose attending')
-        ? 'Please choose attending or not attending for both events.'
-        : 'Your reply could not be saved. Please try again.'
-      setError(message)
+      const known = [
+        'Please choose attending or not attending for both events.',
+        'Please wait a moment and try again.',
+        'This invitation link is not recognised.',
+      ]
+      setError(known.includes(submitError.message) ? submitError.message : 'Your reply could not be saved. Please try again.')
     } finally {
       setSaving(false)
     }

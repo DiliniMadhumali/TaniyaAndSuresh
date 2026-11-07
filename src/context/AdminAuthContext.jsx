@@ -53,17 +53,26 @@ export function AdminAuthProvider({ children }) {
         setLoading(false)
       } catch {
         if (active) {
+          setSession(null)
+          setIsAdmin(false)
           setLoading(false)
         }
       }
     }
 
     supabase.auth.getSession().then(({ data }) => {
-      applySession(data.session)
+      if (active) {
+        applySession(data.session)
+      }
     })
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      applySession(nextSession)
+      // Defer so this does not run inside the Supabase auth lock.
+      setTimeout(() => {
+        if (active) {
+          applySession(nextSession)
+        }
+      }, 0)
     })
 
     return () => {

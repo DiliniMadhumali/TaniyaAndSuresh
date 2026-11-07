@@ -41,7 +41,9 @@ export default function AdminLogin() {
       <main className="mx-auto flex max-w-md flex-col px-4 py-16">
         <p className="text-center text-[0.68rem] uppercase tracking-[0.28em] text-burgundy">Private</p>
         <h1 className="mt-3 text-center font-serif text-5xl text-brown">Admin login</h1>
-        {!configured ? (
+        {loading ? (
+          <p className="mt-8 text-center text-sm text-brown/70">Checking your session…</p>
+        ) : !configured ? (
           <div className="mt-8 border border-gold/70 px-5 py-6 text-sm leading-relaxed">
             <p>Add your Supabase project URL and anon key to <span className="font-medium">.env</span>, then restart the site.</p>
             <p className="mt-3">Use the names in <span className="font-medium">.env.example</span>. Do not put the service role key in the website.</p>

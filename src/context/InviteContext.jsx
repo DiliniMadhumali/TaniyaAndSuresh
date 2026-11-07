@@ -41,11 +41,14 @@ export function InviteProvider({ children }) {
       }
 
       setState({ status: 'ready', guest, message: '' })
-    } catch {
+    } catch (error) {
+      const limited = error?.message === 'Please wait a moment and try again.'
       setState({
         status: 'error',
         guest: null,
-        message: 'We could not open this invitation just now. Please try the link again in a moment.',
+        message: limited
+          ? 'Please wait a moment and try this invitation link again.'
+          : 'We could not open this invitation just now. Please try the link again in a moment.',
       })
     }
   }, [code])

@@ -5,6 +5,18 @@ function toPublicGuest(row) {
     return null
   }
 
+  if (row.outcome === 'rate_limited') {
+    throw new Error('Please wait a moment and try again.')
+  }
+
+  if (row.outcome === 'validation') {
+    throw new Error('Please choose attending or not attending for both events.')
+  }
+
+  if (row.outcome === 'invalid' || !row.full_name) {
+    return null
+  }
+
   return {
     fullName: row.full_name,
     churchAttendance: row.church_attendance,
@@ -35,5 +47,10 @@ export async function submitRsvp(code, church, reception) {
     throw error
   }
 
-  return toPublicGuest(Array.isArray(data) ? data[0] : data)
+  const guest = toPublicGuest(Array.isArray(data) ? data[0] : data)
+  if (!guest) {
+    throw new Error('This invitation link is not recognised.')
+  }
+
+  return guest
 }

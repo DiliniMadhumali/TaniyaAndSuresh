@@ -6,15 +6,11 @@ import { useAdminAuth } from '../../context/AdminAuthContext.jsx'
 
 const PAGE_SIZE = 8
 
-const FILTERS = [
-  ['all', 'All guests'],
-  ['pending', 'Pending RSVPs'],
-  ['attending', 'Attending an event'],
-  ['church_attending', 'Church attending'],
-  ['reception_attending', 'Reception attending'],
-  ['church_not', 'Church not attending'],
-  ['reception_not', 'Reception not attending'],
-  ['not_attending', 'Not attending either event'],
+const ATTENDANCE_FILTERS = [
+  ['all', 'All'],
+  ['pending', 'Pending'],
+  ['attending', 'Attending'],
+  ['not_attending', 'Not attending'],
 ]
 
 export default function AdminDashboard() {
@@ -23,8 +19,11 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [notice, setNotice] = useState(null)
   const [query, setQuery] = useState('')
-  const [filter, setFilter] = useState('all')
+  const [churchFilter, setChurchFilter] = useState('all')
+  const [receptionFilter, setReceptionFilter] = useState('all')
+  const [invitationFilter, setInvitationFilter] = useState('all')
   const [sort, setSort] = useState('newest')
+  const [loadError, setLoadError] = useState(false)
   const [page, setPage] = useState(0)
   const [dialog, setDialog] = useState(null)
 
@@ -36,7 +35,9 @@ export default function AdminDashboard() {
     setLoading(true)
     try {
       setGuests(await listGuests())
+      setLoadError(false)
     } catch (error) {
+      setLoadError(true)
       setNotice({ type: 'error', text: error.message || 'The guest list could not be loaded.' })
     } finally {
       setLoading(false)
@@ -49,7 +50,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     setPage(0)
-  }, [query, filter, sort])
+  }, [query, churchFilter, receptionFilter, invitationFilter, sort])
 
   const stats = useMemo(() => ({
     total: guests.length,
@@ -63,14 +64,22 @@ export default function AdminDashboard() {
     const term = query.trim().toLowerCase()
     const filtered = guests.filter((guest) => {
       const haystack = `${guest.fullName} ${guest.invitationCode}`.toLowerCase()
-      return (!term || haystack.includes(term)) && matchesFilter(guest, filter)
+      return (!term || haystack.includes(term)) && matchesFilters(guest, churchFilter, receptionFilter, invitationFilter)
     })
     return filtered.sort((a, b) => compareGuests(a, b, sort))
-  }, [guests, query, filter, sort])
+  }, [guests, query, churchFilter, receptionFilter, invitationFilter, sort])
 
   const pages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE))
   const currentPage = Math.min(page, pages - 1)
   const rows = visible.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE)
+
+  async function onSignOut() {
+    try {
+      await signOut()
+    } catch (error) {
+      setNotice({ type: 'error', text: error.message || 'Could not log out.' })
+    }
+  }
 
   async function onCopy(guest) {
     try {
@@ -111,7 +120,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-ivory text-brown">
-      <AdminBar email={session?.user?.email} onSignOut={signOut} />
+      <AdminBar email={session?.user?.email} onSignOut={onSignOut} />
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -137,8 +146,8 @@ export default function AdminDashboard() {
           <Stat label="Not attending" value={stats.absent} />
         </section>
 
-        <section className="mt-8 grid gap-3 md:grid-cols-[1fr_16rem_14rem]">
-          <label className="block text-sm">
+        <section className="mt-8 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <label className="block text-sm xl:col-span-1">
             <span className="text-[0.62rem] uppercase tracking-[0.18em] text-burgundy">Search</span>
             <input
               className="admin-field mt-2"
@@ -147,14 +156,18 @@ export default function AdminDashboard() {
               onChange={(event) => setQuery(event.target.value)}
             />
           </label>
-          <label className="block text-sm">
-            <span className="text-[0.62rem] uppercase tracking-[0.18em] text-burgundy">Filter</span>
-            <select className="admin-field mt-2" value={filter} onChange={(event) => setFilter(event.target.value)}>
-              {FILTERS.map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
-          </label>
+          <FilterSelect label="Church RSVP" value={churchFilter} onChange={setChurchFilter} options={ATTENDANCE_FILTERS} />
+          <FilterSelect label="Reception RSVP" value={receptionFilter} onChange={setReceptionFilter} options={ATTENDANCE_FILTERS} />
+          <FilterSelect
+            label="Invitation status"
+            value={invitationFilter}
+            onChange={setInvitationFilter}
+            options={[
+              ['all', 'All'],
+              ['sent', 'Sent'],
+              ['not_sent', 'Not sent'],
+            ]}
+          />
           <label className="block text-sm">
             <span className="text-[0.62rem] uppercase tracking-[0.18em] text-burgundy">Sort</span>
             <select className="admin-field mt-2" value={sort} onChange={(event) => setSort(event.target.value)}>
@@ -167,13 +180,18 @@ export default function AdminDashboard() {
           </label>
         </section>
 
-        {loading ? <p className="mt-10 text-center text-sm text-brown/70">Loading guests…</p> : null}
+        {loading && guests.length === 0 ? <p className="mt-10 text-center text-sm text-brown/70">Loading guests…</p> : null}
+        {loading && guests.length > 0 ? <p className="mt-4 text-sm text-brown/70">Refreshing guests…</p> : null}
 
-        {!loading && rows.length === 0 ? (
+        {!loading && loadError && guests.length === 0 ? (
+          <p className="mt-10 border border-burgundy/40 px-4 py-10 text-center text-sm text-burgundy">The guest list could not be loaded.</p>
+        ) : null}
+
+        {!loading && !loadError && rows.length === 0 ? (
           <p className="mt-10 border border-gold/50 px-4 py-10 text-center text-sm text-brown/80">No guests match this view.</p>
         ) : null}
 
-        {!loading && rows.length > 0 ? (
+        {rows.length > 0 ? (
           <>
             <div className="mt-6 hidden overflow-x-auto md:block">
               <table className="w-full min-w-[860px] border-collapse text-left text-sm">
@@ -254,6 +272,19 @@ export default function AdminDashboard() {
         <ConfirmDelete guest={dialog.guest} onClose={() => setDialog(null)} onConfirm={onDelete} />
       ) : null}
     </div>
+  )
+}
+
+function FilterSelect({ label, value, onChange, options }) {
+  return (
+    <label className="block text-sm">
+      <span className="text-[0.62rem] uppercase tracking-[0.18em] text-burgundy">{label}</span>
+      <select className="admin-field mt-2" value={value} onChange={(event) => onChange(event.target.value)}>
+        {options.map(([option, text]) => (
+          <option key={option} value={option}>{text}</option>
+        ))}
+      </select>
+    </label>
   )
 }
 
@@ -446,37 +477,44 @@ function emptyGuest() {
 }
 
 function validateGuest(form) {
-  if (form.fullName.trim().length < 2) {
-    return 'Enter the guest’s full name.'
+  if (form.fullName.trim().length < 2 || form.fullName.trim().length > 120) {
+    return 'Enter the guest’s full name, using 2 to 120 characters.'
   }
   if (!/^[A-Z0-9]{6,16}$/.test(form.invitationCode.trim().toUpperCase())) {
     return 'The invitation code must be 6 to 16 letters or numbers.'
   }
+  if (form.phoneNumber.trim().length > 40) {
+    return 'The phone number must be 40 characters or fewer.'
+  }
   if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
     return 'Enter a valid email address, or leave it blank.'
+  }
+  if (form.guestCategory.trim().length > 80) {
+    return 'The guest category must be 80 characters or fewer.'
+  }
+  if (!['pending', 'attending', 'not_attending'].includes(form.churchAttendance)) {
+    return 'Choose a church attendance status.'
+  }
+  if (!['pending', 'attending', 'not_attending'].includes(form.receptionAttendance)) {
+    return 'Choose a reception attendance status.'
   }
   return ''
 }
 
-function matchesFilter(guest, filter) {
-  switch (filter) {
-    case 'pending':
-      return guest.churchAttendance === 'pending' || guest.receptionAttendance === 'pending'
-    case 'attending':
-      return guest.churchAttendance === 'attending' || guest.receptionAttendance === 'attending'
-    case 'church_attending':
-      return guest.churchAttendance === 'attending'
-    case 'reception_attending':
-      return guest.receptionAttendance === 'attending'
-    case 'church_not':
-      return guest.churchAttendance === 'not_attending'
-    case 'reception_not':
-      return guest.receptionAttendance === 'not_attending'
-    case 'not_attending':
-      return guest.churchAttendance === 'not_attending' && guest.receptionAttendance === 'not_attending'
-    default:
-      return true
+function matchesFilters(guest, churchFilter, receptionFilter, invitationFilter) {
+  if (churchFilter !== 'all' && guest.churchAttendance !== churchFilter) {
+    return false
   }
+  if (receptionFilter !== 'all' && guest.receptionAttendance !== receptionFilter) {
+    return false
+  }
+  if (invitationFilter === 'sent' && !guest.invitationSent) {
+    return false
+  }
+  if (invitationFilter === 'not_sent' && guest.invitationSent) {
+    return false
+  }
+  return true
 }
 
 function compareGuests(a, b, sort) {

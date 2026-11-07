@@ -1,0 +1,190 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --olive: #85864d;
+  --burgundy: #8b3449;
+  --gold: #c5a66a;
+  --ivory: #f3ebd8;
+  --brown: #38251f;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans text-brown antialiased;
+    background-color: var(--ivory);
+    background-image: radial-gradient(rgb(56 37 31 / 0.045) 0.65px, transparent 0.65px);
+    background-size: 3px 3px;
+  }
+
+  a:focus-visible,
+  button:focus-visible {
+    outline: 1px solid var(--gold);
+    outline-offset: 3px;
+  }
+}
+
+@keyframes descend {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: translateY(6px);
+    opacity: 1;
+  }
+}
+
+.animate-descend {
+  animation: descend 2.2s ease-in-out infinite;
+}
+
+@keyframes invite-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-invite-in {
+  animation: invite-in 1.1s ease both;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+
+  50% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+}
+
+.sparkle {
+  animation: twinkle 2.8s ease-in-out infinite;
+}
+
+@keyframes drift-fall {
+  to {
+    transform: translate3d(var(--dx), 108vh, 0) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+
+@keyframes drift-rise {
+  to {
+    transform: translate3d(var(--dx), -42vh, 0) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+
+.drift-fall {
+  animation-name: drift-fall;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+.drift-rise {
+  animation-name: drift-rise;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+.music-live {
+  animation: music-ring 1.8s ease-out infinite;
+}
+
+.name-shimmer {
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: name-shimmer 5.5s linear infinite;
+}
+
+.name-taniya {
+  background-image: linear-gradient(100deg, #6e5428 0%, #c5a66a 32%, #f8ebc8 50%, #c5a66a 68%, #6e5428 100%);
+}
+
+.name-suresh {
+  background-image: linear-gradient(100deg, #5e2433 0%, #8b3449 38%, #f0d5dc 50%, #8b3449 68%, #5e2433 100%);
+}
+
+@keyframes name-shimmer {
+  to {
+    background-position: 220% center;
+  }
+}
+
+@keyframes hero-petal {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-10deg);
+  }
+
+  50% {
+    transform: translateY(12px) rotate(12deg);
+  }
+}
+
+.hero-petal {
+  animation: hero-petal 6s ease-in-out infinite;
+}
+
+.invite-action {
+  @apply inline-flex min-h-11 items-center justify-center border border-gold px-4 text-[0.66rem] uppercase tracking-[0.18em] text-brown transition-colors hover:bg-olive hover:text-ivory;
+}
+
+.admin-field {
+  @apply w-full border border-gold/70 bg-transparent px-3 py-2 text-sm text-brown outline-none;
+}
+
+.admin-button {
+  @apply inline-flex min-h-11 items-center justify-center border border-burgundy px-4 text-[0.68rem] uppercase tracking-[0.18em] text-burgundy disabled:opacity-50;
+}
+
+.admin-text {
+  @apply text-[0.68rem] uppercase tracking-[0.14em] text-burgundy;
+}
+
+@keyframes music-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgb(198 161 91 / 0.45);
+  }
+
+  100% {
+    box-shadow: 0 0 0 10px rgb(198 161 91 / 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-descend,
+  .animate-invite-in,
+  .sparkle,
+  .drift-fall,
+  .drift-rise,
+  .music-live,
+  .name-shimmer,
+  .hero-petal {
+    animation: none;
+  }
+}
